@@ -1,261 +1,207 @@
 'use client'
 import { useEffect, useState } from "react";
-import styles from '../styles/page.module.css'
-
-// Interfaces
-interface Actividad {
-  titulo: string;
-  dia: string;
-  lugar: string;
-  encargado: string;
-  tipo: string;
-}
-
-interface Participante {
-  nombreComp: string;
-  apellidoComp: string;
-  celular: number;
-  funcion: string;
-  edad: number;
-}
-
-interface Iniciativa {
-  tituloPlan: string;
-  descripcion: string;
-  responsable: string;
-  duracionMeses: number;
-}
-
-interface Evento {
-  nombre: string;
-  fecha: string;
-  lugar: string;
-  organizador: string;
-}
-
-interface Beneficiario {
-  nombre: string;
-  edad: number;
-  direccion: string;
-  tipo: string;
-}
-
-interface Proyecto {
-  nombre: string;
-  objetivo: string;
-  responsable: string;
-  presupuesto: number;
-}
-
-// Estados iniciales
-const estadoInicialActividad: Actividad = {
-  titulo: "",
-  dia: "",
-  lugar: "",
-  encargado: "",
-  tipo: ""
-};
-
-const estadoInicialParticipante: Participante = {
-  nombreComp: "",
-  apellidoComp: "",
-  celular: 0,
-  funcion: "",
-  edad: 0
-};
-
-const estadoInicialIniciativa: Iniciativa = {
-  tituloPlan: "",
-  descripcion: "",
-  responsable: "",
-  duracionMeses: 0
-};
-
-const estadoInicialEvento: Evento = {
-  nombre: "",
-  fecha: "",
-  lugar: "",
-  organizador: ""
-};
-
-const estadoInicialBeneficiario: Beneficiario = {
-  nombre: "",
-  edad: 0,
-  direccion: "",
-  tipo: ""
-};
-
-const estadoInicialProyecto: Proyecto = {
-  nombre: "",
-  objetivo: "",
-  responsable: "",
-  presupuesto: 0
-};
 
 export default function Home() {
-  const miStorage = window.localStorage;
+  const miStorage = typeof window !== "undefined" ? window.localStorage : null;
+
+  interface Actividad {
+    titulo: string;
+    dia: string;
+    lugar: string;
+    encargado: string;
+    tipo: string;
+  }
+
+  const estadoInicialActividad: Actividad = {
+    titulo: "",
+    dia: "",
+    lugar: "",
+    encargado: "",
+    tipo: ""
+  };
 
   const [actividad, setActividad] = useState(estadoInicialActividad);
   const [actividades, setActividades] = useState<Actividad[]>([]);
   const [editActividadIndex, setEditActividadIndex] = useState<number | null>(null);
 
-  const [participante, setParticipante] = useState(estadoInicialParticipante);
-  const [participantes, setParticipantes] = useState<Participante[]>([]);
-  const [editParticipanteIndex, setEditParticipanteIndex] = useState<number | null>(null);
-
-  const [iniciativa, setIniciativa] = useState(estadoInicialIniciativa);
-  const [iniciativas, setIniciativas] = useState<Iniciativa[]>([]);
-  const [editIniciativaIndex, setEditIniciativaIndex] = useState<number | null>(null);
-
-  const [evento, setEvento] = useState(estadoInicialEvento);
-  const [eventos, setEventos] = useState<Evento[]>([]);
-  const [editEventoIndex, setEditEventoIndex] = useState<number | null>(null);
-
-  const [beneficiario, setBeneficiario] = useState(estadoInicialBeneficiario);
-  const [beneficiarios, setBeneficiarios] = useState<Beneficiario[]>([]);
-  const [editBeneficiarioIndex, setEditBeneficiarioIndex] = useState<number | null>(null);
-
-  const [proyecto, setProyecto] = useState(estadoInicialProyecto);
-  const [proyectos, setProyectos] = useState<Proyecto[]>([]);
-  const [editProyectoIndex, setEditProyectoIndex] = useState<number | null>(null);
-
   useEffect(() => {
-    const act = miStorage.getItem("actividades");
-    const par = miStorage.getItem("participantes");
-    const ini = miStorage.getItem("iniciativas");
-    const evt = miStorage.getItem("eventos");
-    const ben = miStorage.getItem("beneficiarios");
-    const proy = miStorage.getItem("proyectos");
-
-    if (act) setActividades(JSON.parse(act));
-    if (par) setParticipantes(JSON.parse(par));
-    if (ini) setIniciativas(JSON.parse(ini));
-    if (evt) setEventos(JSON.parse(evt));
-    if (ben) setBeneficiarios(JSON.parse(ben));
-    if (proy) setProyectos(JSON.parse(proy));
+    const item = miStorage?.getItem("actividades");
+    if (item) setActividades(JSON.parse(item));
   }, []);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-    stateSetter: Function,
+    setter: Function,
     state: any
   ) => {
     const { name, value } = e.target;
-    const parsedValue = ["celular", "edad", "duracionMeses", "presupuesto"].includes(name) ? Number(value) : value;
-    stateSetter({ ...state, [name]: parsedValue });
+    setter({ ...state, [name]: value });
   };
 
-  const crearHandlers = (estado: any, setEstado: Function, lista: any[], setLista: Function, index: number | null, setIndex: Function, storageKey: string, mensaje: string) => {
-    if (index !== null) {
-      if (confirm(`¿Actualizar ${mensaje}?`)) {
-        const nuevaLista = [...lista];
-        nuevaLista[index] = estado;
-        setLista(nuevaLista);
-        miStorage.setItem(storageKey, JSON.stringify(nuevaLista));
-        setIndex(null);
-        setEstado(estadoInicial(estado));
+  const handleSave = () => {
+    if (editActividadIndex !== null) {
+      if (confirm("¿Desea actualizar este registro?")) {
+        const lista = [...actividades];
+        lista[editActividadIndex] = actividad;
+        setActividades(lista);
+        miStorage?.setItem("actividades", JSON.stringify(lista));
+        setEditActividadIndex(null);
+        setActividad(estadoInicialActividad);
       }
     } else {
-      const nuevaLista = [...lista, estado];
-      setLista(nuevaLista);
-      miStorage.setItem(storageKey, JSON.stringify(nuevaLista));
-      setEstado(estadoInicial(estado));
+      const lista = [...actividades, actividad];
+      setActividades(lista);
+      miStorage?.setItem("actividades", JSON.stringify(lista));
+      setActividad(estadoInicialActividad);
     }
   };
 
-  const estadoInicial = (estado: any) => {
-    if ("titulo" in estado) return estadoInicialActividad;
-    if ("nombreComp" in estado) return estadoInicialParticipante;
-    if ("tituloPlan" in estado) return estadoInicialIniciativa;
-    if ("fecha" in estado) return estadoInicialEvento;
-    if ("direccion" in estado) return estadoInicialBeneficiario;
-    if ("objetivo" in estado) return estadoInicialProyecto;
-    return {};
+  const handleEdit = (i: number) => {
+    setActividad(actividades[i]);
+    setEditActividadIndex(i);
   };
 
-  const crearEditar = (i: number, lista: any[], setEstado: Function, setIndex: Function) => {
-    setEstado(lista[i]);
-    setIndex(i);
-  };
-
-  const crearEliminar = (i: number, lista: any[], setLista: Function, storageKey: string, mensaje: string) => {
-    if (confirm(`¿Eliminar ${mensaje}?`)) {
-      const nuevaLista = lista.filter((_: any, index: number) => index !== i);
-      setLista(nuevaLista);
-      miStorage.setItem(storageKey, JSON.stringify(nuevaLista));
+  const handleDelete = (i: number) => {
+    if (confirm("¿Está seguro de eliminar este elemento?")) {
+      const lista = actividades.filter((_, idx) => idx !== i);
+      setActividades(lista);
+      miStorage?.setItem("actividades", JSON.stringify(lista));
     }
   };
 
   return (
     <div className="app-container">
+      <style>{`
+        .app-container {
+          font-family: sans-serif;
+          background: #f9f9f9;
+          padding: 30px;
+          max-width: 800px;
+          margin: auto;
+          color: #111;
+        }
 
-      {/* Reutilizar secciones */}
-      {/* Aquí deberías copiar/pegar el bloque del formulario como hiciste antes pero usando los nuevos estados */}
+        h1, h2 {
+          color: #111;
+          margin-bottom: 10px;
+        }
 
-      {/* Listados */}
+        .form-section, .list-section {
+          background: #fff;
+          padding: 20px;
+          margin-bottom: 30px;
+          border-radius: 10px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        input, select {
+          width: 100%;
+          padding: 10px;
+          margin-bottom: 12px;
+          border: 1px solid #ccc;
+          border-radius: 8px;
+          font-size: 14px;
+          color: #111;
+        }
+
+        button {
+          padding: 10px 16px;
+          background-color: #007acc;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          margin-top: 5px;
+        }
+
+        button:hover {
+          background-color: #005fa3;
+        }
+
+        ul {
+          list-style-type: none;
+          padding: 0;
+        }
+
+        li {
+          background: #f1f1f1;
+          margin-bottom: 8px;
+          padding: 10px;
+          border-radius: 8px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          color: #111;
+        }
+
+        li span {
+          flex-grow: 1;
+        }
+
+        li button {
+          background-color: #4CAF50;
+          margin-left: 5px;
+        }
+
+        li button:last-child {
+          background-color: #e53935;
+        }
+      `}</style>
+
+      <section className="form-section">
+        <h1>Registrar Actividad</h1>
+        <input
+          name="titulo"
+          placeholder="Título"
+          value={actividad.titulo}
+          onChange={(e) => handleInputChange(e, setActividad, actividad)}
+        />
+        <input
+          name="dia"
+          type="date"
+          value={actividad.dia}
+          onChange={(e) => handleInputChange(e, setActividad, actividad)}
+        />
+        <input
+          name="lugar"
+          placeholder="Lugar"
+          value={actividad.lugar}
+          onChange={(e) => handleInputChange(e, setActividad, actividad)}
+        />
+        <input
+          name="encargado"
+          placeholder="Encargado"
+          value={actividad.encargado}
+          onChange={(e) => handleInputChange(e, setActividad, actividad)}
+        />
+        <select
+          name="tipo"
+          value={actividad.tipo}
+          onChange={(e) => handleInputChange(e, setActividad, actividad)}
+        >
+          <option value="">Selecciona Tipo</option>
+          <option value="Taller Educativo">Taller Educativo</option>
+          <option value="Taller Cultural">Taller Cultural</option>
+          <option value="Taller Deportivo">Taller Deportivo</option>
+          <option value="Charla Informativa">Charla Informativa</option>
+          <option value="Charla Motivacional">Charla Motivacional</option>
+          <option value="Actividad Recreativa">Actividad Recreativa</option>
+        </select>
+        <button onClick={handleSave}>
+          {editActividadIndex !== null ? "Actualizar" : "Registrar"}
+        </button>
+      </section>
+
       <section className="list-section">
-        <h2>Actividades</h2>
+        <h2>Actividades Registradas</h2>
         <ul>
           {actividades.map((a, i) => (
             <li key={i}>
-              {a.titulo} - {a.dia} - {a.lugar} - {a.tipo} - {a.encargado}
-              <button onClick={() => crearEditar(i, actividades, setActividad, setEditActividadIndex)}>Editar</button>
-              <button onClick={() => crearEliminar(i, actividades, setActividades, "actividades", "actividad")}>Eliminar</button>
-            </li>
-          ))}
-        </ul>
-
-        <h2>Participantes</h2>
-        <ul>
-          {participantes.map((p, i) => (
-            <li key={i}>
-              {p.nombreComp} {p.apellidoComp} - {p.celular} - {p.funcion} - {p.edad} años
-              <button onClick={() => crearEditar(i, participantes, setParticipante, setEditParticipanteIndex)}>Editar</button>
-              <button onClick={() => crearEliminar(i, participantes, setParticipantes, "participantes", "participante")}>Eliminar</button>
-            </li>
-          ))}
-        </ul>
-
-        <h2>Iniciativas</h2>
-        <ul>
-          {iniciativas.map((i, index) => (
-            <li key={index}>
-              {i.tituloPlan} - {i.descripcion} - Responsable: {i.responsable} - {i.duracionMeses} meses
-              <button onClick={() => crearEditar(index, iniciativas, setIniciativa, setEditIniciativaIndex)}>Editar</button>
-              <button onClick={() => crearEliminar(index, iniciativas, setIniciativas, "iniciativas", "iniciativa")}>Eliminar</button>
-            </li>
-          ))}
-        </ul>
-
-        <h2>Eventos</h2>
-        <ul>
-          {eventos.map((e, i) => (
-            <li key={i}>
-              {e.nombre} - {e.fecha} - {e.lugar} - {e.organizador}
-              <button onClick={() => crearEditar(i, eventos, setEvento, setEditEventoIndex)}>Editar</button>
-              <button onClick={() => crearEliminar(i, eventos, setEventos, "eventos", "evento")}>Eliminar</button>
-            </li>
-          ))}
-        </ul>
-
-        <h2>Beneficiarios</h2>
-        <ul>
-          {beneficiarios.map((b, i) => (
-            <li key={i}>
-              {b.nombre}, {b.edad} años - {b.direccion} ({b.tipo})
-              <button onClick={() => crearEditar(i, beneficiarios, setBeneficiario, setEditBeneficiarioIndex)}>Editar</button>
-              <button onClick={() => crearEliminar(i, beneficiarios, setBeneficiarios, "beneficiarios", "beneficiario")}>Eliminar</button>
-            </li>
-          ))}
-        </ul>
-
-        <h2>Proyectos</h2>
-        <ul>
-          {proyectos.map((p, i) => (
-            <li key={i}>
-              {p.nombre} - {p.objetivo} - Responsable: {p.responsable} - ${p.presupuesto}
-              <button onClick={() => crearEditar(i, proyectos, setProyecto, setEditProyectoIndex)}>Editar</button>
-              <button onClick={() => crearEliminar(i, proyectos, setProyectos, "proyectos", "proyecto")}>Eliminar</button>
+              <span>{a.titulo} - {a.dia} - {a.lugar} - {a.tipo} - {a.encargado}</span>
+              <div>
+                <button onClick={() => handleEdit(i)}>Editar</button>
+                <button onClick={() => handleDelete(i)}>Eliminar</button>
+              </div>
             </li>
           ))}
         </ul>
